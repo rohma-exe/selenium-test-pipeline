@@ -1,27 +1,47 @@
-FROM python:3.10-slim
+# Use Python base image
+FROM python:3.9-slim
 
-# Install Chrome
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
-    wget unzip gnupg curl \
-    && wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
-    && apt install -y ./google-chrome*.deb \
-    && rm google-chrome*.deb
+    wget \
+    curl \
+    unzip \
+    gnupg \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Google Chrome
+RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
+    && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list \
+    && apt-get update \
+    && apt-get install -y google-chrome-stable \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install ChromeDriver
-RUN CHROME_VERSION=$(google-chrome --version | awk '{print $3}') && \
-    CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE") && \
-    wget -O /tmp/chromedriver.zip "https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip" && \
-    unzip /tmp/chromedriver.zip -d /usr/local/bin && \
-    chmod +x /usr/local/bin/chromedriver && \
-    rm /tmp/chromedriver.zip
+RUN CHROMEDRIVER_VERSION=`curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE` && \
+    mkdir -p /opt/chromedriver-$CHROMEDRIVER_VERSION && \
+    curl -sS -o /tmp/chromedriver_linux64.zip http://chromedriver.storage.googleapis.com/LATEST_RELEASE/chromedriver_linux64.zip && \
+    unzip -qq /tmp/chromedriver_linux64.zip -d /opt/chromedriver-$CHROMEDRIVER_VERSION && \
+    rm /tmp/chromedriver_linux64.zip && \
+    chmod +x /opt/chromedriver-$CHROMEDRIVER_VERSION/chromedriver && \
+    ln -fs /opt/chromedriver-$CHROMEDRIVER_VERSION/chromedriver /usr/local/bin/chromedriver
 
-# Install dependencies
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-
-# Copy test files
-COPY . /app
+# Set working directory
 WORKDIR /app
 
-# Run tests
-CMD ["python", "test_login.py"]
+# Copy requirements and install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy test files
+COPY . .
+
+# Set environment variables
+ENV PYTHONPATH=/app
+ENV DISPLAY=:99
+
+# Create a non-root user for security
+RUN useradd -m -u 1000 testuser && chown -R testuser:testuser /app
+USER testuser
+
+# Default command to run tests
+CMD ["python", "-m", "pytest", "test_login.py", "-v", "--tb=short"]
