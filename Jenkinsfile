@@ -41,11 +41,15 @@ pipeline {
             steps {
                 echo '🧪 Running Selenium tests...'
                 sh '''
-                    pip3 install selenium
-                    python3 test_login.py
+                python3 -m venv venv
+                . venv/bin/activate
+                pip install selenium
+                python test_login.py
                 '''
             }
-        }
+            }
+
+
 
 
         stage('Stop Containers') {
