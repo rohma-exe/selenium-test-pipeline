@@ -1,18 +1,34 @@
-# Use lightweight Python image with Chrome pre-installed
-FROM joyzoursky/python-chromedriver:3.9-selenium
+FROM python:3.12-slim
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    wget unzip curl gnupg \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Chrome
+RUN curl -sS -o - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
+    && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list \
+    && apt-get update \
+    && apt-get install -y google-chrome-stable \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install ChromeDriver that matches Chrome 137
+ENV CHROMEDRIVER_VERSION=137.0.7151.70
+RUN wget -q "https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/${CHROMEDRIVER_VERSION}/linux64/chromedriver-linux64.zip" \
+    && unzip chromedriver-linux64.zip \
+    && mv chromedriver-linux64/chromedriver /usr/local/bin/chromedriver \
+    && chmod +x /usr/local/bin/chromedriver \
+    && rm -rf chromedriver-linux64*
 
 # Set working directory
 WORKDIR /app
 
-# Copy requirements and install Python dependencies
+# Install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy test files
-COPY . .
+# Copy your test script
+COPY test_login.py .
 
-# Set environment variables for headless Chrome
-ENV PYTHONPATH=/app
-
-# Default command to run tests
-CMD ["python", "-m", "pytest", "test_login.py", "-v", "--tb=short"]
+# Run the test
+CMD ["python", "test_login.py"]

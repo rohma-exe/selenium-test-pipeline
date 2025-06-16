@@ -1,79 +1,27 @@
 pipeline {
     agent any
-    
+
     environment {
-        DOCKER_IMAGE = 'selenium-tests'
-        DOCKER_TAG = "${BUILD_NUMBER}"
+        TEST_IMAGE = 'selenium-test-image'
     }
-    
+
     stages {
-        stage('Checkout') {
+        stage('Clone Repo') {
             steps {
-                echo 'Checking out code from GitHub...'
-                checkout scm
+                git branch: 'main', url: 'https://github.com/rohma-exe/selenium-test-pipeline.git'
             }
         }
-        
+
         stage('Build Docker Image') {
             steps {
-                echo 'Building Docker image for Selenium tests...'
-                script {
-                    docker.build("${DOCKER_IMAGE}:${DOCKER_TAG}", "selenium-tests/")
-                }
+                sh 'docker build -t ${TEST_IMAGE} .'
             }
         }
-        
+
         stage('Run Tests') {
             steps {
-                echo 'Running Selenium tests in Docker container...'
-                script {
-                    try {
-                        sh """
-                            docker run --rm \
-                                --name selenium-tests-${BUILD_NUMBER} \
-                                --shm-size=2g \
-                                -v /dev/shm:/dev/shm \
-                                ${DOCKER_IMAGE}:${DOCKER_TAG}
-                        """
-                        echo 'All tests passed successfully!'
-                    } catch (Exception e) {
-                        echo "Tests failed: ${e.getMessage()}"
-                        currentBuild.result = 'FAILURE'
-                        throw e
-                    }
-                }
+                sh 'docker run --rm --network host ${TEST_IMAGE}'
             }
-        }
-        
-        stage('Cleanup') {
-            steps {
-                echo 'Cleaning up Docker images...'
-                script {
-                    try {
-                        sh """
-                            docker rmi ${DOCKER_IMAGE}:${DOCKER_TAG} || true
-                            docker system prune -f
-                        """
-                    } catch (Exception e) {
-                        echo "Cleanup warning: ${e.getMessage()}"
-                    }
-                }
-            }
-        }
-    }
-    
-    post {
-        always {
-            echo 'Pipeline execution completed.'
-        }
-        success {
-            echo 'Pipeline executed successfully! All tests passed.'
-        }
-        failure {
-            echo 'Pipeline failed! Check the logs for details.'
-        }
-        cleanup {
-            cleanWs()
         }
     }
 }
