@@ -2,33 +2,41 @@ pipeline {
     agent any
 
     environment {
-        COMPOSE_FILE = 'docker-compose.yml'
-        PROJECT_NAME = 'selenium_pipeline'
+        REPO_URL = 'https://github.com/rohma-exe/DevOps_Deployement.git'
+        FOLDER = 'app'
     }
 
     stages {
-        stage('Clone Repo') {
+        stage('Clone App Repo') {
             steps {
-                git branch: 'master', url: 'https://github.com/rohma-exe/selenium-test-pipeline.git'
+                echo '📦 Cloning the DevOps project...'
+                sh 'rm -rf $FOLDER'
+                sh 'git clone $REPO_URL $FOLDER'
             }
         }
 
-        stage('Build and Run Tests') {
+        stage('Build and Run Containers') {
             steps {
-                sh 'docker-compose -p $PROJECT_NAME up --abort-on-container-exit --build'
+                dir("$FOLDER") {
+                    echo '🐳 Running docker-compose up...'
+                    sh 'docker-compose -p selenium_pipeline up --abort-on-container-exit --build'
+                }
+            }
+        }
+
+        stage('Stop Containers') {
+            steps {
+                dir("$FOLDER") {
+                    echo '🧹 Cleaning up containers...'
+                    sh 'docker-compose -p selenium_pipeline down'
+                }
             }
         }
     }
 
     post {
-        success {
-            echo '✅ Tests passed!'
-        }
-        failure {
-            echo '❌ Tests failed. Check console output.'
-        }
         always {
-            sh 'docker-compose -p $PROJECT_NAME down'
+            echo '✅ Pipeline finished (success or fail)'
         }
     }
 }
