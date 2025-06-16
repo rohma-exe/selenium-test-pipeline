@@ -36,13 +36,17 @@ pipeline {
             }
         }
 
-        // Optional: add Selenium testing stage here if needed
+        
         stage('Run Selenium Tests') {
             steps {
                 echo '🧪 Running Selenium tests...'
-                sh 'python3 test_login.py'
+                sh '''
+                    pip3 install selenium
+                    python3 test_login.py
+                '''
             }
         }
+
 
         stage('Stop Containers') {
             steps {
