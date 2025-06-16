@@ -40,7 +40,7 @@ pipeline {
         stage('Run Selenium Tests') {
             steps {
                 echo '🧪 Running Selenium tests...'
-                sh 'python3 tests/test_login.py' // Example: adjust path as needed
+                sh 'python3 test_login.py'
             }
         }
 
