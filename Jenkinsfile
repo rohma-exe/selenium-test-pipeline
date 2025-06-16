@@ -9,7 +9,7 @@ pipeline {
     stages {
         stage('Clone App Repo') {
             steps {
-                echo '📦 Cloning the DevOps project...'
+                echo '📦 Cloning the DevOps_Deployement repo...'
                 sh 'rm -rf $FOLDER'
                 sh 'git clone $REPO_URL $FOLDER'
             }
@@ -18,7 +18,7 @@ pipeline {
         stage('Build and Run Containers') {
             steps {
                 dir("$FOLDER") {
-                    echo '🐳 Running docker-compose up...'
+                    echo '🐳 Running docker-compose in app directory...'
                     sh 'docker-compose -p selenium_pipeline up --abort-on-container-exit --build'
                 }
             }
@@ -36,7 +36,7 @@ pipeline {
 
     post {
         always {
-            echo '✅ Pipeline finished (success or fail)'
+            echo '✅ Pipeline complete.'
         }
     }
 }
