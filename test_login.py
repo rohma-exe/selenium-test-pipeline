@@ -5,7 +5,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-BASE_URL = "http://localhost:3000"
+BASE_URL = "http://54.224.159.2:3000/"
 
 def create_driver():
     options = Options()
