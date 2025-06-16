@@ -1,45 +1,52 @@
 pipeline {
     agent any
-
-    environment {
-        REPO_URL = 'https://github.com/rohma-exe/DevOps_Deployement.git'
-        FOLDER = 'app'
-    }
-
+    
     stages {
         stage('Clone App Repo') {
             steps {
                 echo '📦 Cloning the DevOps_Deployement repo...'
-                sh 'rm -rf $FOLDER'
-                sh 'git clone $REPO_URL $FOLDER'
+                sh 'rm -rf app'
+                sh 'git clone https://github.com/rohma-exe/DevOps_Deployement.git app'
             }
         }
-
+        
+        stage('Cleanup Docker') {
+            steps {
+                dir('app') {
+                    echo '🧹 Cleaning up existing Docker resources...'
+                    // Clean up any existing containers and resources
+                    sh 'docker-compose -p selenium_pipeline down --volumes --remove-orphans || true'
+                    sh 'docker system prune -f || true'
+                }
+            }
+        }
+        
         stage('Build and Run Containers') {
             steps {
-                dir("$FOLDER") {
+                dir('app') {
                     echo '🐳 Running docker-compose in app directory...'
-                    # Add this to your Jenkinsfile before the docker-compose command
-                    sh 'docker-compose -p selenium_pipeline down --volumes --remove-orphans'
-                    sh 'docker system prune -f'
                     sh 'docker-compose -p selenium_pipeline up --abort-on-container-exit --build'
                 }
             }
         }
-
+        
         stage('Stop Containers') {
             steps {
-                dir("$FOLDER") {
-                    echo '🧹 Cleaning up containers...'
-                    sh 'docker-compose -p selenium_pipeline down'
+                dir('app') {
+                    echo '🛑 Stopping containers...'
+                    sh 'docker-compose -p selenium_pipeline down --volumes'
                 }
             }
         }
     }
-
+    
     post {
         always {
             echo '✅ Pipeline complete.'
+            // Clean up even if pipeline fails
+            dir('app') {
+                sh 'docker-compose -p selenium_pipeline down --volumes --remove-orphans || true'
+            }
         }
     }
 }
