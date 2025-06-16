@@ -1,0 +1,14 @@
+# docker-compose.yml
+version: '3.8'
+
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+
+  test-runner:
+    build: ./selenium-test
+    depends_on:
+      - frontend
+    network_mode: "host"
