@@ -1,6 +1,6 @@
 pipeline {
     agent any
-    
+
     stages {
         stage('Clone App Repo') {
             steps {
@@ -9,27 +9,41 @@ pipeline {
                 sh 'git clone https://github.com/rohma-exe/DevOps_Deployement.git app'
             }
         }
-        
+
         stage('Cleanup Docker') {
             steps {
                 dir('app') {
                     echo '🧹 Cleaning up existing Docker resources...'
-                    // Clean up any existing containers and resources
                     sh 'docker-compose -p selenium_pipeline down --volumes --remove-orphans || true'
                     sh 'docker system prune -f || true'
                 }
             }
         }
-        
+
         stage('Build and Run Containers') {
             steps {
                 dir('app') {
-                    echo '🐳 Running docker-compose in app directory...'
-                    sh 'docker-compose -p selenium_pipeline up --abort-on-container-exit --build'
+                    echo '🐳 Running docker-compose in detached mode...'
+                    sh 'docker-compose -p selenium_pipeline up -d --build'
                 }
             }
         }
-        
+
+        stage('Wait for App to be Ready') {
+            steps {
+                echo '⏳ Waiting for backend/frontend to be ready...'
+                sh 'sleep 15'
+            }
+        }
+
+        // Optional: add Selenium testing stage here if needed
+        stage('Run Selenium Tests') {
+            steps {
+                echo '🧪 Running Selenium tests...'
+                sh 'python3 tests/test_login.py' // Example: adjust path as needed
+            }
+        }
+
         stage('Stop Containers') {
             steps {
                 dir('app') {
@@ -39,11 +53,10 @@ pipeline {
             }
         }
     }
-    
+
     post {
         always {
             echo '✅ Pipeline complete.'
-            // Clean up even if pipeline fails
             dir('app') {
                 sh 'docker-compose -p selenium_pipeline down --volumes --remove-orphans || true'
             }
