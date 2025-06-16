@@ -19,6 +19,9 @@ pipeline {
             steps {
                 dir("$FOLDER") {
                     echo '🐳 Running docker-compose in app directory...'
+                    # Add this to your Jenkinsfile before the docker-compose command
+                    sh 'docker-compose -p selenium_pipeline down --volumes --remove-orphans'
+                    sh 'docker system prune -f'
                     sh 'docker-compose -p selenium_pipeline up --abort-on-container-exit --build'
                 }
             }
