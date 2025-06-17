@@ -52,14 +52,14 @@ pipeline {
 
 
 
-        stage('Stop Containers') {
-            steps {
-                dir('app') {
-                    echo '🛑 Stopping containers...'
-                    sh 'docker-compose -p selenium_pipeline down --volumes'
-                }
-            }
-        }
+        // stage('Stop Containers') {
+        //     steps {
+        //         dir('app') {
+        //             echo '🛑 Stopping containers...'
+        //             sh 'docker-compose -p selenium_pipeline down --volumes'
+        //         }
+        //     }
+        // }
     }
 
     post {
