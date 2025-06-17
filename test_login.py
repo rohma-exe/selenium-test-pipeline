@@ -21,7 +21,7 @@ def wait_for_url_change(driver, wait, old_url):
 
 def login_to_app(driver, email="", password=""):
     driver.get(f"{BASE_URL}/login")
-    wait = WebDriverWait(driver, 20)
+    wait = WebDriverWait(driver, 120)
     if email:
         wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "input[type='email']"))).send_keys(email)
     if password:

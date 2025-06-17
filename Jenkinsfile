@@ -71,9 +71,9 @@ pipeline {
     post {
         always {
             echo '✅ Pipeline complete.'
-            dir('app') {
-                sh 'docker-compose -p selenium_pipeline down --volumes --remove-orphans || true'
-            }
+            // dir('app') {
+            //     sh 'docker-compose -p selenium_pipeline down --volumes --remove-orphans || true'
+            // }
         }
     }
 }
