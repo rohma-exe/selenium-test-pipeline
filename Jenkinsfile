@@ -23,7 +23,8 @@ pipeline {
         stage('Build and Run Containers') {
             steps {
                 dir('app') {
-                    echo '🐳 Running docker-compose in detached mode...'
+                    echo '🐳 Creating network (if missing) and running containers...'
+                    sh 'docker network create selenium_pipeline_default || true'
                     sh 'docker-compose -p selenium_pipeline up -d --build'
                 }
             }
@@ -36,7 +37,6 @@ pipeline {
             }
         }
 
-        
         stage('Run Selenium Tests') {
             steps {
                 echo '🧪 Running Selenium tests...'
@@ -47,11 +47,9 @@ pipeline {
                 python test_login.py
                 '''
             }
-            }
+        }
 
-
-
-
+        // Optional: Uncomment if you want to stop containers before post
         // stage('Stop Containers') {
         //     steps {
         //         dir('app') {
