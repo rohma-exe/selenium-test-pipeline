@@ -33,7 +33,15 @@ pipeline {
         stage('Wait for App to be Ready') {
             steps {
                 echo '⏳ Waiting for backend/frontend to be ready...'
-                sh 'sleep 15'
+                sh '''
+                STATUS=1
+                for i in {1..30}; do
+                curl -s http://localhost:3000 | grep -q "<title>" && STATUS=0 && break
+                sleep 2
+                done
+                exit $STATUS
+                '''
+
             }
         }
 
